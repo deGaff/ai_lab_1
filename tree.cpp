@@ -11,7 +11,7 @@
 static std::string spacing =     "             ";
 static std::string children =    "  CHILDREN:  ";
 static std::string visited =     " VISITED NODE";
-static std::string no_children = " NO CHILDREN ";
+static std::string no_goal_state = " GOAL STATE NOT FOUND ";
 static std::string goal_state = "<-- GOAL STATE";
 
 //todo make not turn based & file dump one
@@ -132,10 +132,6 @@ void tree::turnBasedBFS(const cell &original_state, const cell &target_state) {
     std::queue<std::shared_ptr<tree::node>> q;
     q.push(std::make_shared<tree::node>(original_state));
 
-    str << q.back()->state;//TODO nemnozhko kostil'
-    std::cout << str;
-    pause();
-
     while(!q.empty()) {
         str.clear();
 
@@ -146,15 +142,15 @@ void tree::turnBasedBFS(const cell &original_state, const cell &target_state) {
         std::cout << str;
         pause();
 
-        if(!(states.insert(current->state).second)) {
+        if (!(states.insert(current->state).second)) {
             q.pop();
             str.addSpacing(visited);
             std::cout << str;
             pause();
             continue;
         }
-        for(auto& performed_action : tree::actions) {
-            if(performed_action.isPossible(current->state)){
+        for (auto &performed_action: tree::actions) {
+            if (performed_action.isPossible(current->state)) {
                 //todo is it needed to first push the node that was already visited?
                 q.push(std::make_shared<tree::node>(current, performed_action));
 
@@ -162,7 +158,7 @@ void tree::turnBasedBFS(const cell &original_state, const cell &target_state) {
                 std::cout << str;
                 pause();
 
-                if (q.back()->state == target_state){
+                if (q.back()->state == target_state) {
                     str.addSpacing(goal_state);
                     std::cout << str;
                     pause();
@@ -172,4 +168,7 @@ void tree::turnBasedBFS(const cell &original_state, const cell &target_state) {
         }
         q.pop();
     }
+    str.addSpacing(no_goal_state);
+    std::cout << str;
+    pause();
 }
