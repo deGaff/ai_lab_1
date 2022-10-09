@@ -13,23 +13,17 @@
 
 #define ONE_TURN_PATH_COST 1
 
+void pause();
+
 class STRING {
 public:
-//    STRING() : strings(5) {}
-    STRING(std::ostream& stream) : strings(5), stream(stream) {}
+    STRING() : strings(5) {}
     friend std::ostream& operator<<(std::ostream& stream, const STRING& c);
     std::string& line(size_t i) { return strings[i];}
-    STRING& newRow();
-    STRING& switchRow(size_t n) { this->n = n; return *this;}
-    STRING& incrementRow() { newRow(); ++n; return *this;}
-    STRING& dumpRow();
-    STRING& addSpacing();
-    size_t curRow() { return n; }
+    STRING& addSpacing(const std::string& mes);
+    void clear();
 private:
     std::vector<std::string> strings;
-    std::ostream& stream;
-    size_t length = 0,
-            n = 0;
 };
 
 class cell {
@@ -89,7 +83,7 @@ namespace tree {
         unsigned path_cost, depth;
     };
 
-    STRING BFS(const cell& original_state, const cell& target_state);
+    void turnBasedBFS(const cell& original_state, const cell& target_state);
 }
 
 

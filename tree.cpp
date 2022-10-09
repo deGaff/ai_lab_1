@@ -6,9 +6,22 @@
 #include <queue>
 #include <unordered_set>
 #include <fstream>
+#include <conio.h>
 
-static std::string spacing =  "          ";
-static std::string children = " CHILDREN ";
+static std::string spacing =     "             ";
+static std::string children =    "  CHILDREN:  ";
+static std::string visited =     " VISITED NODE";
+static std::string no_children = " NO CHILDREN ";
+static std::string goal_state = "<-- GOAL STATE";
+
+//todo make not turn based & file dump one
+//todo make STRING namespace (and rename perhaps)
+
+void pause() {
+    std::string dump;
+    getch();
+    system("cls");
+}
 
 std::ostream &operator<<(std::ostream &stream, const STRING &c) {
     for (const auto &str: c.strings) {
@@ -17,18 +30,10 @@ std::ostream &operator<<(std::ostream &stream, const STRING &c) {
     return stream;
 }
 
-STRING& STRING::dumpRow() {
-    stream << *this;
-    for (auto& i : strings) {
-        i = "";
-    }
-    return *this;
-}
-
-STRING& STRING::addSpacing() {
+STRING& STRING::addSpacing(const std::string& mes = spacing) {
     size_t i = 0;
     for(;i < 2; ++i) strings[i] += spacing;
-    strings[++i] += children;
+    strings[i++] += mes;
     for(;i < 5; ++i) strings[i] += spacing;
 
     return *this;
@@ -45,7 +50,7 @@ std::ostream &operator<<(std::ostream &stream, const cell &c) {
 }
 
 STRING &operator<<(STRING &strings, const cell &c) {
-    size_t i = strings.curRow() * 5;
+    size_t i = 0;
 
     strings.line(i) += "_________   ";
     for (const auto &row: c.numbers) {
@@ -61,13 +66,12 @@ STRING &operator<<(STRING &strings, const cell &c) {
     return strings;
 }
 
-STRING &STRING::newRow() {
-    strings.resize(5 * (++length));
-    for (size_t i = 0; i < 5; ++i) {
-        strings.emplace_back("");
+void STRING::clear() {
+    for (auto& line : strings) {
+        line = "";
     }
-    return *this;
 }
+
 
 bool tree::action::isPossible(const cell &c) const {
     auto emptyCoord = c.getEmpty();
@@ -118,37 +122,54 @@ size_t cell_hash::operator()(const cell &c) const {
     return result;
 }
 
-STRING tree::BFS(const cell &original_state, const cell &target_state) {
-    std::ofstream fout("output.txt");
-    STRING str(fout);
+void tree::turnBasedBFS(const cell &original_state, const cell &target_state) {
+//    std::ofstream fout("output.txt");
+//    STRING str(fout);
+
+    STRING str;
     std::unordered_set<cell, cell_hash> states;
 
     std::queue<std::shared_ptr<tree::node>> q;
     q.push(std::make_shared<tree::node>(original_state));
 
     str << q.back()->state;//TODO nemnozhko kostil'
-    str.dumpRow();
+    std::cout << str;
+    pause();
 
     while(!q.empty()) {
+        str.clear();
+
         auto current = q.front();
+
         str << current->state;
-        str.addSpacing();
+        str.addSpacing(children);
+        std::cout << str;
+        pause();
+
         if(!(states.insert(current->state).second)) {
             q.pop();
+            str.addSpacing(visited);
+            std::cout << str;
+            pause();
             continue;
         }
         for(auto& performed_action : tree::actions) {
             if(performed_action.isPossible(current->state)){
+                //todo is it needed to first push the node that was already visited?
                 q.push(std::make_shared<tree::node>(current, performed_action));
+
                 str << q.back()->state;
+                std::cout << str;
+                pause();
+
                 if (q.back()->state == target_state){
-                    return str;
+                    str.addSpacing(goal_state);
+                    std::cout << str;
+                    pause();
+                    return;
                 }
             }
         }
-        str.dumpRow();
         q.pop();
     }
-
-    return str;
 }

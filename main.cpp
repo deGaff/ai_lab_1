@@ -45,7 +45,7 @@ int main() {
 
 // bfs test
 // std::cout << tree::BFS(a, b)
-    tree::BFS(a, c);
+    tree::turnBasedBFS(a, c);
 
     //    std::cout << (a==c) << (a==a);
     return 0;
