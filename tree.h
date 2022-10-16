@@ -13,7 +13,7 @@
 
 #define ONE_TURN_PATH_COST 1
 
-void pause();
+char pause();
 
 class STRING {
 public:
@@ -29,6 +29,7 @@ private:
 class cell {
     using CELL = std::vector<std::vector<char>>;
 public:
+    cell();
     cell(CELL  numbers);
 
     cell(const cell& c) = default;
@@ -43,6 +44,8 @@ public:
 
     friend std::ostream& operator<<(std::ostream& stream, const cell& c);
     friend STRING& operator<<(STRING& strings, const cell& c);
+
+    friend std::istream& operator>>(std::istream& stream, cell& c);
 private:
     CELL numbers;
     std::pair<size_t, size_t> empty;
@@ -84,7 +87,20 @@ namespace tree {
     };
 
     void turnBasedBFS(const cell& original_state, const cell& target_state);
+    void BFS(const cell &original_state, const cell &target_state, std::ostream& out);
+
+    void limitedDFS(const cell& original_state, const cell& target_state, size_t limited, std::ostream& out);
+    void turnBasedLimitedDFS(const cell& original_state, const cell& target_state, size_t limited);
 }
+
+class menu {
+public:
+    void print();
+    void use();
+private:
+    std::pair<bool, cell> original = {false, cell()},
+                            target  = {false, cell()};
+};
 
 
 #endif //INC_1_TREE_H
