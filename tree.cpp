@@ -15,7 +15,7 @@ static std::string visited =     " VISITED NODE";
 static std::string no_goal_state = " GOAL STATE NOT FOUND ";
 static std::string depth_limit = "  DEPTH LIMIT REACHED ";
 static std::string goal_state = "<-- GOAL STATE";
-static std::string longline = "_______________________________________________________________________";
+static std::string longline = "_______________________________________________________________________\n";
 
 //todo make not turn based & file dump one
 //todo make STRING namespace (and rename perhaps)
