@@ -5,13 +5,13 @@
 
 int main() {
 
-//    cell a({    {'1', '2', '3'},
-//                        {'4', '5', '6'},
-//                        {'7', '8', ' '}}),
-//
-//            c({ {' ', '2', '3'},
-//                        {'1', '5', '6'},
-//                        {'4', '7', '8'}});
+    cell a({    {'1', '2', '3'},
+                        {'4', '5', '6'},
+                        {'7', '8', ' '}}),
+
+            c({ {' ', '2', '3'},
+                        {'1', '5', '6'},
+                        {'4', '7', '8'}});
 
 //    tree::turnBasedBFS(a, c);
 
@@ -23,9 +23,16 @@ int main() {
 //
 //    tree::turnBasedLimitedDFS(a, c, 4);
 
-    menu m;
+//    std::cout << a.getManhattanDist(c);
+//    pause();
 
-    m.use();
+//    menu m;
+//
+//    m.use();
+
+
+    AStar<comparator_h1>(a, c, std::cout);
+    pause();
 
     return 0;
 }

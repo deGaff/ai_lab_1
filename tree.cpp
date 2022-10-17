@@ -8,16 +8,8 @@
 #include <unordered_set>
 #include <fstream>
 #include <conio.h>
+//#include <math.h>
 
-static std::string spacing =     "             ";
-static std::string children =    "  CHILDREN:  ";
-static std::string visited =     " VISITED NODE";
-static std::string no_goal_state = " GOAL STATE NOT FOUND ";
-static std::string depth_limit = "  DEPTH LIMIT REACHED ";
-static std::string goal_state = "<-- GOAL STATE";
-static std::string longline = "_______________________________________________________________________\n";
-
-//todo make not turn based & file dump one
 //todo make STRING namespace (and rename perhaps)
 
 char pause() {
@@ -29,6 +21,7 @@ char pause() {
 
 cell::cell() {
     numbers.resize(3, std::vector<char>(3));
+    number_coord.resize(9);
 }
 
 std::ostream &operator<<(std::ostream &stream, const STRING &c) {
@@ -79,9 +72,14 @@ std::istream& operator>>(std::istream& stream, cell& c) {
         for(int j = 0; j < 3; ++j) {
             auto& ref = c.getNumber({i, j});
             stream >> ref;
+
             if(ref == '0') {
                 c.empty = {i, j};
+                c.getNumbCoord(0) = {i, j};
                 ref = ' ';
+            }
+            else {
+                c.getNumbCoord(ref - '0') = {i, j};
             }
         }
     }
@@ -115,6 +113,9 @@ cell tree::action::operator()(const cell& c) const {
     cell child(c);
 
     auto& emptyCoord = child.getEmpty();
+    child.getNumbCoord(0) = {emptyCoord.first+r_shift, emptyCoord.second+c_shift};
+    child.getNumbCoord(child.getNumber({emptyCoord.first+r_shift,
+                                        emptyCoord.second+c_shift}) - '0') = emptyCoord;
     child.getNumber(emptyCoord) = child.getNumber({emptyCoord.first+r_shift, emptyCoord.second+c_shift});
     emptyCoord.first += r_shift;
     emptyCoord.second += c_shift;
@@ -123,14 +124,22 @@ cell tree::action::operator()(const cell& c) const {
     return child;
 }
 
-cell::cell(CELL  numbers) : numbers(std::move(numbers)), empty({0, 0}) {
-    for (const auto& row : this->numbers) {
-        for (auto number : row) {
-            if(number == ' ') return;
-            ++empty.second;
+cell::cell(CELL  numbers) : numbers(std::move(numbers)), empty({0, 0}), number_coord(9) {
+
+    bool found_empty = false;
+    for(size_t i = 0; i < 3; ++i) {
+        for(size_t j = 0; j < 3; ++j) {
+            if(this->numbers[i][j] == ' ') found_empty = true;
+
+            if(this->numbers[i][j] == ' ') number_coord[0] = {i, j};
+            else number_coord[this->numbers[i][j] - '0'] = {i, j};
+
+            if(!found_empty) ++empty.second;
         }
-        empty.second = 0;
-        ++empty.first;
+        if(!found_empty) {
+            empty.second = 0;
+            ++empty.first;
+        }
     }
 }
 
@@ -411,6 +420,8 @@ void menu::use() {
                     break;
                 case '0':
                     exit(0);
+                    o_bfs.close();
+                    o_dfs.close();
                 default:
                     std::cout << "Wrong symbol\n";
             }
@@ -431,12 +442,52 @@ void menu::use() {
                     break;
                 case '0':
                     exit(0);
+                    o_bfs.close();
+                    o_dfs.close();
                 default:
                     std::cout << "Wrong symbol\n";
             }
         }
         pause();
     }
-    o_bfs.close();
-    o_dfs.close();
+
+}
+
+std::pair<size_t, size_t>& cell::getNumbCoord(size_t n) {
+    return number_coord[n];
+}
+
+size_t cell::getManhattanDist(const cell& oth) const {
+    size_t count = 0;
+
+    for (size_t i = 0; i < 9; ++i) {
+        count += abs((int)number_coord[i].first - (int)oth.number_coord[i].first) +
+                abs((int)number_coord[i].second - (int)oth.number_coord[i].second);
+    }
+    return count;
+}
+
+
+size_t h1(const cell &cur) {
+    size_t count = 0;
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if(cur.getNumber({i, j}) != goal.getNumber({i, j})) ++count;
+        }
+    }
+    return count;
+}
+
+size_t h2(const cell& cur) {
+    return cur.getManhattanDist(goal);
+}
+
+bool comparator_h1::operator()(std::shared_ptr<tree::node> lhs,
+                               std::shared_ptr<tree::node> rhs) const {
+    return lhs->depth + h1(lhs->state) < rhs->depth + h1(rhs->state);
+}
+
+bool comparator_h2::operator()(std::shared_ptr<tree::node> lhs,
+                               std::shared_ptr<tree::node> rhs) const {
+    return lhs->depth + h2(lhs->state) < rhs->depth + h2(rhs->state);
 }

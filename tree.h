@@ -10,8 +10,19 @@
 #include <string>
 #include <memory>
 #include <tuple>
+#include <unordered_set>
+#include <queue>
+
 
 #define ONE_TURN_PATH_COST 1
+
+static std::string spacing =     "             ";
+static std::string children =    "  CHILDREN:  ";
+static std::string visited =     " VISITED NODE";
+static std::string no_goal_state = " GOAL STATE NOT FOUND ";
+static std::string depth_limit = "  DEPTH LIMIT REACHED ";
+static std::string goal_state = "<-- GOAL STATE";
+static std::string longline = "_______________________________________________________________________\n";
 
 char pause();
 
@@ -44,11 +55,15 @@ public:
 
     friend std::ostream& operator<<(std::ostream& stream, const cell& c);
     friend STRING& operator<<(STRING& strings, const cell& c);
-
     friend std::istream& operator>>(std::istream& stream, cell& c);
+
+    std::pair<size_t, size_t>& getNumbCoord(size_t n);
+    size_t getManhattanDist(const cell& oth) const;
+
 private:
     CELL numbers;
     std::pair<size_t, size_t> empty;
+    std::vector<std::pair<size_t, size_t>> number_coord;
 };
 
 class cell_hash {
@@ -102,5 +117,69 @@ private:
                             target  = {false, cell()};
 };
 
+static cell goal({  {' ', '2', '3'},
+                    {'1', '5', '6'},
+                    {'4', '7', '8'}});
+
+size_t h1(const cell &cur);
+size_t h2(const cell &cur);
+
+class comparator_h1 {
+    bool operator()(std::shared_ptr<tree::node> lhs,
+                    std::shared_ptr<tree::node> rhs) const;
+};
+
+class comparator_h2 {
+    bool operator()(std::shared_ptr<tree::node> lhs,
+                    std::shared_ptr<tree::node> rhs) const;
+};
+
+template <typename comparator>
+void AStar(const cell &original_state, const cell &target_state, std::ostream& out) {
+    STRING str;
+
+    std::unordered_set<cell, cell_hash> open_list, closed_list;
+    out << longline;
+
+    std::priority_queue<std::shared_ptr<tree::node>, comparator> q;
+    q.push(std::make_shared<tree::node>(original_state));
+    open_list.insert(q.top()->state);
+
+    while(!q.empty()) {
+        str.clear();
+
+        auto current = q.top();
+        q.pop();
+
+        str << current->state;
+        str.addSpacing(children);
+
+        open_list.erase(current->state);
+        closed_list.insert(current->state);
+
+        if (current->state == target_state) {
+            str.addSpacing(goal_state);
+            out << str;
+            out << longline;
+            return;
+        }
+
+        for (auto &performed_action: tree::actions) {
+            if (performed_action.isPossible(current->state)) {
+                auto ptr = std::make_shared<tree::node>(current, performed_action);
+                if(closed_list.find(ptr->state) == closed_list.end()
+                    && open_list.insert(ptr->state).second) {
+                    q.push(ptr);
+                    str << ptr->state;
+                }
+            }
+        }
+        out << str;
+        q.pop();
+    }
+    str.addSpacing(no_goal_state);
+    out << str;
+    out << longline;
+}
 
 #endif //INC_1_TREE_H
