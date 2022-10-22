@@ -16,13 +16,16 @@
 
 #define ONE_TURN_PATH_COST 1
 
-static std::string spacing =     "             ";
-static std::string children =    "  CHILDREN:  ";
-static std::string visited =     " VISITED NODE";
-static std::string no_goal_state = " GOAL STATE NOT FOUND ";
-static std::string depth_limit = "  DEPTH LIMIT REACHED ";
-static std::string goal_state = "<-- GOAL STATE";
-static std::string longline = "_______________________________________________________________________\n";
+namespace mes {
+    static std::string spacing =        "             ";
+    static std::string children =       "  CHILDREN:  ";
+    static std::string queue =          "    QUEUE:   ";
+    static std::string visited =        " VISITED NODE";
+    static std::string no_goal_state =  " GOAL STATE NOT FOUND ";
+    static std::string depth_limit =    "  DEPTH LIMIT REACHED ";
+    static std::string goal_state =     "<-- GOAL STATE";
+    static std::string longline =       "_______________________________________________________________________\n";
+}
 
 char pause();
 
@@ -125,11 +128,13 @@ size_t h1(const cell &cur);
 size_t h2(const cell &cur);
 
 class comparator_h1 {
+public:
     bool operator()(std::shared_ptr<tree::node> lhs,
                     std::shared_ptr<tree::node> rhs) const;
 };
 
 class comparator_h2 {
+public:
     bool operator()(std::shared_ptr<tree::node> lhs,
                     std::shared_ptr<tree::node> rhs) const;
 };
@@ -139,9 +144,9 @@ void AStar(const cell &original_state, const cell &target_state, std::ostream& o
     STRING str;
 
     std::unordered_set<cell, cell_hash> open_list, closed_list;
-    out << longline;
+    out << mes::longline;
 
-    std::priority_queue<std::shared_ptr<tree::node>, comparator> q;
+    std::priority_queue<std::shared_ptr<tree::node>, std::vector<std::shared_ptr<tree::node>>, comparator> q;
     q.push(std::make_shared<tree::node>(original_state));
     open_list.insert(q.top()->state);
 
@@ -152,15 +157,15 @@ void AStar(const cell &original_state, const cell &target_state, std::ostream& o
         q.pop();
 
         str << current->state;
-        str.addSpacing(children);
+        str.addSpacing(mes::children);
 
         open_list.erase(current->state);
         closed_list.insert(current->state);
 
         if (current->state == target_state) {
-            str.addSpacing(goal_state);
+            str.addSpacing(mes::goal_state);
             out << str;
-            out << longline;
+            out << mes::longline;
             return;
         }
 
@@ -174,12 +179,12 @@ void AStar(const cell &original_state, const cell &target_state, std::ostream& o
                 }
             }
         }
+
         out << str;
-        q.pop();
     }
-    str.addSpacing(no_goal_state);
+    str.addSpacing(mes::no_goal_state);
     out << str;
-    out << longline;
+    out << mes::longline;
 }
 
 #endif //INC_1_TREE_H

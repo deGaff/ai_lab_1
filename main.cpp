@@ -32,6 +32,7 @@ int main() {
 
 
     AStar<comparator_h1>(a, c, std::cout);
+//    AStar<comparator_h1>(a, c, fstr);
     pause();
 
     return 0;

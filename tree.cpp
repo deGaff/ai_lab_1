@@ -31,11 +31,11 @@ std::ostream &operator<<(std::ostream &stream, const STRING &c) {
     return stream;
 }
 
-STRING& STRING::addSpacing(const std::string& mes = spacing) {
+STRING& STRING::addSpacing(const std::string& mes = mes::spacing) {
     size_t i = 0;
-    for(;i < 2; ++i) strings[i] += spacing;
+    for(;i < 2; ++i) strings[i] += mes::spacing;
     strings[i++] += mes;
-    for(;i < 5; ++i) strings[i] += spacing;
+    for(;i < 5; ++i) strings[i] += mes::spacing;
 
     return *this;
 }
@@ -171,13 +171,13 @@ void tree::turnBasedBFS(const cell &original_state, const cell &target_state) {
 
         if (!(states.insert(current->state).second)) {
             q.pop();
-            str.addSpacing(visited);
+            str.addSpacing(mes::visited);
             std::cout << str;
             pause();
             continue;
         }
 
-        str.addSpacing(children);
+        str.addSpacing(mes::children);
 
         for (auto &performed_action: tree::actions) {
             if (performed_action.isPossible(current->state)) {
@@ -188,7 +188,7 @@ void tree::turnBasedBFS(const cell &original_state, const cell &target_state) {
                 pause();
 
                 if (q.back()->state == target_state) {
-                    str.addSpacing(goal_state);
+                    str.addSpacing(mes::goal_state);
                     std::cout << str;
                     pause();
                     return;
@@ -197,7 +197,7 @@ void tree::turnBasedBFS(const cell &original_state, const cell &target_state) {
         }
         q.pop();
     }
-    str.addSpacing(no_goal_state);
+    str.addSpacing(mes::no_goal_state);
     std::cout << str;
 }
 
@@ -218,20 +218,20 @@ void tree::turnBasedLimitedDFS(const cell& original_state, const cell& target_st
         pause();
 
         if(current->depth == limited) {
-            str.addSpacing(depth_limit);
+            str.addSpacing(mes::depth_limit);
             std::cout << str;
             pause();
             continue;
         }
 
         if (!(states.insert(current->state).second)) {
-            str.addSpacing(visited);
+            str.addSpacing(mes::visited);
             std::cout << str;
             pause();
             continue;
         }
 
-        str.addSpacing(children);
+        str.addSpacing(mes::children);
 
         for (auto &performed_action: tree::actions) {
             if (performed_action.isPossible(current->state)) {
@@ -243,7 +243,7 @@ void tree::turnBasedLimitedDFS(const cell& original_state, const cell& target_st
                 pause();
 
                 if (ptr->state == target_state) {
-                    str.addSpacing(goal_state);
+                    str.addSpacing(mes::goal_state);
                     std::cout << str;
                     pause();
                     return;
@@ -251,7 +251,7 @@ void tree::turnBasedLimitedDFS(const cell& original_state, const cell& target_st
             }
         }
     }
-    str.addSpacing(no_goal_state);
+    str.addSpacing(mes::no_goal_state);
     std::cout << str;
 }
 
@@ -259,7 +259,7 @@ void tree::BFS(const cell &original_state, const cell &target_state, std::ostrea
     STRING str;
     std::unordered_set<cell, cell_hash> states;
 
-    out << longline;
+    out << mes::longline;
 
     std::queue<std::shared_ptr<tree::node>> q;
     q.push(std::make_shared<tree::node>(original_state));
@@ -270,11 +270,11 @@ void tree::BFS(const cell &original_state, const cell &target_state, std::ostrea
         auto current = q.front();
 
         str << current->state;
-        str.addSpacing(children);
+        str.addSpacing(mes::children);
 
         if (!(states.insert(current->state).second)) {
             q.pop();
-            str.addSpacing(visited);
+            str.addSpacing(mes::visited);
             out << str;
             continue;
         }
@@ -285,9 +285,9 @@ void tree::BFS(const cell &original_state, const cell &target_state, std::ostrea
                 str << q.back()->state;
 
                 if (q.back()->state == target_state) {
-                    str.addSpacing(goal_state);
+                    str.addSpacing(mes::goal_state);
                     out << str;
-                    out << longline;
+                    out << mes::longline;
                     return;
                 }
             }
@@ -295,16 +295,16 @@ void tree::BFS(const cell &original_state, const cell &target_state, std::ostrea
         out << str;
         q.pop();
     }
-    str.addSpacing(no_goal_state);
+    str.addSpacing(mes::no_goal_state);
     out << str;
-    out << longline;
+    out << mes::longline;
 }
 
 void tree::limitedDFS(const cell& original_state, const cell& target_state, size_t limited, std::ostream& out) {
     STRING str;
     std::unordered_set<cell, cell_hash> states;
 
-    out << longline;
+    out << mes::longline;
 
     std::stack<std::shared_ptr<tree::node>> s;
     s.push(std::make_shared<tree::node>(original_state));
@@ -317,18 +317,18 @@ void tree::limitedDFS(const cell& original_state, const cell& target_state, size
         str << current->state;
 
         if(current->depth == limited) {
-            str.addSpacing(depth_limit);
+            str.addSpacing(mes::depth_limit);
             out << str;
             continue;
         }
 
         if (!(states.insert(current->state).second)) {
-            str.addSpacing(visited);
+            str.addSpacing(mes::visited);
             out << str;
             continue;
         }
 
-        str.addSpacing(children);
+        str.addSpacing(mes::children);
 
         for (auto &performed_action: tree::actions) {
             if (performed_action.isPossible(current->state)) {
@@ -338,18 +338,18 @@ void tree::limitedDFS(const cell& original_state, const cell& target_state, size
                 str << ptr->state;
 
                 if (ptr->state == target_state) {
-                    str.addSpacing(goal_state);
+                    str.addSpacing(mes::goal_state);
                     out << str;
-                    out << longline;
+                    out << mes::longline;
                     return;
                 }
             }
         }
         out << str;
     }
-    str.addSpacing(no_goal_state);
+    str.addSpacing(mes::no_goal_state);
     out << str;
-    out << longline;
+    out << mes::longline;
 }
 
 void menu::print() {
