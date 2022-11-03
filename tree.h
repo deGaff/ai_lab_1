@@ -17,14 +17,13 @@
 #define ONE_TURN_PATH_COST 1
 
 namespace mes {
-    static std::string spacing =        "             ";
-    static std::string children =       "  CHILDREN:  ";
-    static std::string queue =          "    QUEUE:   ";
-    static std::string visited =        " VISITED NODE";
+    static std::string spacing =        "              ";
+    static std::string children =       "   CHILDREN:  ";
+    static std::string queue =          "     QUEUE:   ";
+    static std::string visited =        " <--VISITED   ";
     static std::string no_goal_state =  " GOAL STATE NOT FOUND ";
     static std::string depth_limit =    "  DEPTH LIMIT REACHED ";
     static std::string goal_state =     "<-- GOAL STATE";
-    static std::string longline =       "_______________________________________________________________________\n";
 }
 
 char pause();
@@ -104,11 +103,11 @@ namespace tree {
         unsigned path_cost, depth;
     };
 
-    void turnBasedBFS(const cell& original_state, const cell& target_state);
-    void BFS(const cell &original_state, const cell &target_state, std::ostream& out);
 
-    void limitedDFS(const cell& original_state, const cell& target_state, size_t limited, std::ostream& out);
-    void turnBasedLimitedDFS(const cell& original_state, const cell& target_state, size_t limited);
+    void turnBasedRoutine(STRING& str, std::ostream& out, bool isTurnBased);
+    void BFS(const cell &original_state, const cell &target_state, bool isTurnBased, std::ostream& out);
+    void limitedDFS(const cell &original_state, const cell &target_state,
+                    bool isTurnBased, size_t limited, std::ostream& out);
 }
 
 class menu {
@@ -139,52 +138,52 @@ public:
                     std::shared_ptr<tree::node> rhs) const;
 };
 
-template <typename comparator>
-void AStar(const cell &original_state, const cell &target_state, std::ostream& out) {
-    STRING str;
-
-    std::unordered_set<cell, cell_hash> open_list, closed_list;
-    out << mes::longline;
-
-    std::priority_queue<std::shared_ptr<tree::node>, std::vector<std::shared_ptr<tree::node>>, comparator> q;
-    q.push(std::make_shared<tree::node>(original_state));
-    open_list.insert(q.top()->state);
-
-    while(!q.empty()) {
-        str.clear();
-
-        auto current = q.top();
-        q.pop();
-
-        str << current->state;
-        str.addSpacing(mes::children);
-
-        open_list.erase(current->state);
-        closed_list.insert(current->state);
-
-        if (current->state == target_state) {
-            str.addSpacing(mes::goal_state);
-            out << str;
-            out << mes::longline;
-            return;
-        }
-
-        for (auto &performed_action: tree::actions) {
-            if (performed_action.isPossible(current->state)) {
-                auto ptr = std::make_shared<tree::node>(current, performed_action);
-                if(closed_list.find(ptr->state) == closed_list.end()
-                    && open_list.insert(ptr->state).second) {
-                    q.push(ptr);
-                    str << ptr->state;
-                }
-            }
-        }
-
-        out << str;
-    }
-    str.addSpacing(mes::no_goal_state);
-    out << str;
-    out << mes::longline;
-}
+//template <typename comparator>
+//void AStar(const cell &original_state, const cell &target_state, std::ostream& out) {
+//    STRING str;
+//
+//    std::unordered_set<cell, cell_hash> open_list, closed_list;
+//    out << mes::longline;
+//
+//    std::priority_queue<std::shared_ptr<tree::node>, std::vector<std::shared_ptr<tree::node>>, comparator> q;
+//    q.push(std::make_shared<tree::node>(original_state));
+//    open_list.insert(q.top()->state);
+//
+//    while(!q.empty()) {
+//        str.clear();
+//
+//        auto current = q.top();
+//        q.pop();
+//
+//        str << current->state;
+//        str.addSpacing(mes::children);
+//
+//        open_list.erase(current->state);
+//        closed_list.insert(current->state);
+//
+//        if (current->state == target_state) {
+//            str.addSpacing(mes::goal_state);
+//            out << str;
+//            out << mes::longline;
+//            return;
+//        }
+//
+//        for (auto &performed_action : tree::actions) {
+//            if (performed_action.isPossible(current->state)) {
+//                auto ptr = std::make_shared<tree::node>(current, performed_action);
+//                if(closed_list.find(ptr->state) == closed_list.end()
+//                    && open_list.insert(ptr->state).second) {
+//                    q.push(ptr);
+//                    str << ptr->state;
+//                }
+//            }
+//        }
+//
+//        out << str;
+//    }
+//    str.addSpacing(mes::no_goal_state);
+//    out << str;
+//    out << mes::longline;
+//}
 
 #endif //INC_1_TREE_H

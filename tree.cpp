@@ -153,12 +153,20 @@ size_t cell_hash::operator()(const cell &c) const {
     return result;
 }
 
-void tree::turnBasedBFS(const cell &original_state, const cell &target_state) {
+void tree::turnBasedRoutine(STRING& str, std::ostream& out, bool isTurnBased) {
+    if(isTurnBased) {
+        std::cout << str;
+        pause();
+    }
+}
+
+void tree::BFS(const cell &original_state, const cell &target_state, bool isTurnBased, std::ostream& out) {
     STRING str;
     std::unordered_set<cell, cell_hash> states;
 
     std::queue<std::shared_ptr<tree::node>> q;
     q.push(std::make_shared<tree::node>(original_state));
+    states.insert(original_state);
 
     while(!q.empty()) {
         str.clear();
@@ -166,190 +174,91 @@ void tree::turnBasedBFS(const cell &original_state, const cell &target_state) {
         auto current = q.front();
 
         str << current->state;
-        std::cout << str;
-        pause();
+        turnBasedRoutine(str, out, isTurnBased);
 
-        if (!(states.insert(current->state).second)) {
-            q.pop();
-            str.addSpacing(mes::visited);
-            std::cout << str;
-            pause();
-            continue;
+        if (current->state == target_state) {
+            str.addSpacing(mes::goal_state);
+            out << str;
+            return;
         }
 
         str.addSpacing(mes::children);
 
         for (auto &performed_action: tree::actions) {
             if (performed_action.isPossible(current->state)) {
-                q.push(std::make_shared<tree::node>(current, performed_action));
 
-                str << q.back()->state;
-                std::cout << str;
-                pause();
+                auto ptr = std::make_shared<tree::node>(current, performed_action);
+                str << ptr->state;
 
-                if (q.back()->state == target_state) {
-                    str.addSpacing(mes::goal_state);
-                    std::cout << str;
-                    pause();
-                    return;
+                if(!(states.insert(ptr->state).second)) {
+                    str.addSpacing(mes::visited);
                 }
+                else {
+                    q.push(ptr);
+                }
+
+                turnBasedRoutine(str, out, isTurnBased);
             }
         }
+        if(!isTurnBased) out << str;
         q.pop();
     }
     str.addSpacing(mes::no_goal_state);
     std::cout << str;
 }
 
-void tree::turnBasedLimitedDFS(const cell& original_state, const cell& target_state, size_t limited) {
+void tree::limitedDFS(const cell &original_state, const cell &target_state,
+                bool isTurnBased, size_t limited, std::ostream& out) {
     STRING str;
     std::unordered_set<cell, cell_hash> states;
 
     std::stack<std::shared_ptr<tree::node>> s;
     s.push(std::make_shared<tree::node>(original_state));
+    states.insert(original_state);
 
     while(!s.empty()) {
         str.clear();
 
         auto current = s.top();
         s.pop();
+
         str << current->state;
-        std::cout << str;
-        pause();
+        turnBasedRoutine(str, out, isTurnBased);
 
         if(current->depth == limited) {
             str.addSpacing(mes::depth_limit);
-            std::cout << str;
-            pause();
+            turnBasedRoutine(str, out, isTurnBased);
             continue;
         }
 
-        if (!(states.insert(current->state).second)) {
-            str.addSpacing(mes::visited);
-            std::cout << str;
-            pause();
-            continue;
+        if (current->state == target_state) {
+            str.addSpacing(mes::goal_state);
+            out << str;
+            return;
         }
 
         str.addSpacing(mes::children);
 
         for (auto &performed_action: tree::actions) {
             if (performed_action.isPossible(current->state)) {
+
                 auto ptr = std::make_shared<tree::node>(current, performed_action);
-                s.push(ptr);
-
                 str << ptr->state;
-                std::cout << str;
-                pause();
 
-                if (ptr->state == target_state) {
-                    str.addSpacing(mes::goal_state);
-                    std::cout << str;
-                    pause();
-                    return;
+                if(!(states.insert(ptr->state).second)) {
+                    str.addSpacing(mes::visited);
                 }
+                else {
+                    s.push(ptr);
+                }
+
+                turnBasedRoutine(str, out, isTurnBased);
             }
         }
+        if(!isTurnBased) out << str;
     }
     str.addSpacing(mes::no_goal_state);
     std::cout << str;
-}
-
-void tree::BFS(const cell &original_state, const cell &target_state, std::ostream& out) {
-    STRING str;
-    std::unordered_set<cell, cell_hash> states;
-
-    out << mes::longline;
-
-    std::queue<std::shared_ptr<tree::node>> q;
-    q.push(std::make_shared<tree::node>(original_state));
-
-    while(!q.empty()) {
-        str.clear();
-
-        auto current = q.front();
-
-        str << current->state;
-        str.addSpacing(mes::children);
-
-        if (!(states.insert(current->state).second)) {
-            q.pop();
-            str.addSpacing(mes::visited);
-            out << str;
-            continue;
-        }
-        for (auto &performed_action: tree::actions) {
-            if (performed_action.isPossible(current->state)) {
-                q.push(std::make_shared<tree::node>(current, performed_action));
-
-                str << q.back()->state;
-
-                if (q.back()->state == target_state) {
-                    str.addSpacing(mes::goal_state);
-                    out << str;
-                    out << mes::longline;
-                    return;
-                }
-            }
-        }
-        out << str;
-        q.pop();
-    }
-    str.addSpacing(mes::no_goal_state);
-    out << str;
-    out << mes::longline;
-}
-
-void tree::limitedDFS(const cell& original_state, const cell& target_state, size_t limited, std::ostream& out) {
-    STRING str;
-    std::unordered_set<cell, cell_hash> states;
-
-    out << mes::longline;
-
-    std::stack<std::shared_ptr<tree::node>> s;
-    s.push(std::make_shared<tree::node>(original_state));
-
-    while(!s.empty()) {
-        str.clear();
-
-        auto current = s.top();
-        s.pop();
-        str << current->state;
-
-        if(current->depth == limited) {
-            str.addSpacing(mes::depth_limit);
-            out << str;
-            continue;
-        }
-
-        if (!(states.insert(current->state).second)) {
-            str.addSpacing(mes::visited);
-            out << str;
-            continue;
-        }
-
-        str.addSpacing(mes::children);
-
-        for (auto &performed_action: tree::actions) {
-            if (performed_action.isPossible(current->state)) {
-                auto ptr = std::make_shared<tree::node>(current, performed_action);
-                s.push(ptr);
-
-                str << ptr->state;
-
-                if (ptr->state == target_state) {
-                    str.addSpacing(mes::goal_state);
-                    out << str;
-                    out << mes::longline;
-                    return;
-                }
-            }
-        }
-        out << str;
-    }
-    str.addSpacing(mes::no_goal_state);
-    out << str;
-    out << mes::longline;
 }
 
 void menu::print() {
@@ -368,7 +277,14 @@ void menu::print() {
                 "6. Solve with limited DFS: Turn Based\n" <<
                 "7. Solve with limited DFS: into \"output_dfs.txt\" file\n" <<
                 "8. Solve with limited DFS: at once into console\n" <<
-                "________________________________________________________\n";
+                "________________________________________________________\n" <<
+                "9. Solve with A* (first heuristic func): Turn Based\n" <<
+                "q. Solve with A* (first heuristic func): into \"output_astar1.txt\" file\n" <<
+                "w. Solve with A* (first heuristic func): at once into console\n" <<
+                "________________________________________________________\n" <<
+                "e. Solve with A* (second heuristic func): Turn Based\n" <<
+                "r. Solve with A* (second heuristic func): into \"output_astar2.txt\" file\n" <<
+                "t. Solve with A* (second heuristic func): at once into console\n";
 
     std::cout << "0. Exit\n";
 }
@@ -376,7 +292,10 @@ void menu::print() {
 void menu::use() {
     unsigned limit = 0;
     std::ofstream o_bfs("output_bfs.txt"),
-            o_dfs("output_dfs.txt");
+            o_dfs("output_dfs.txt"),
+            o_star1("output_astar1.txt"),
+            o_star2("output_astar2.txt");
+
     while (true) {
         print();
         if(original.first && target.first) {
@@ -394,29 +313,35 @@ void menu::use() {
                     std::cout << "\nEntered state:\n" << target.second;
                     break;
                 case '3':
-                    tree::turnBasedBFS(original.second, target.second);
+                    tree::BFS(original.second, target.second, true, std::cout);
                     break;
                 case '4':
-                    tree::BFS(original.second, target.second, o_bfs);
+                    tree::BFS(original.second, target.second, false, o_bfs);
                     std::cout << "Puzzle was solved. Results are in \"output_bfs.txt\" file\n";
                     break;
                 case '5':
-                    tree::BFS(original.second, target.second, std::cout);
+                    tree::BFS(original.second, target.second, false, std::cout);
                     break;
                 case '6':
                     std::cout << "Enter limit\n";
-                    tree::turnBasedLimitedDFS(original.second, target.second, limit);
+                    std::cin >> limit;
+                    tree::limitedDFS(original.second, target.second, true, limit, std::cout);
                     break;
                 case '7':
                     std::cout << "Enter limit\n";
                     std::cin >> limit;
-                    tree::limitedDFS(original.second, target.second, limit, o_dfs);
+                    tree::limitedDFS(original.second, target.second, false, limit, o_dfs);
                     std::cout << "Puzzle was solved. Results are in \"output_dfs.txt\" file\n";
                     break;
                 case '8':
-                    std::cout << "Enter limit\n";
-                    std::cin >> limit;
-                    tree::limitedDFS(original.second, target.second, limit, std::cout);
+                    tree::limitedDFS(original.second, target.second, false, limit, std::cout);
+                    break;
+                case '9':
+                    tree::
+                    break;
+                case 'q':
+                    break;
+                case 'w':
                     break;
                 case '0':
                     exit(0);
@@ -484,10 +409,10 @@ size_t h2(const cell& cur) {
 
 bool comparator_h1::operator()(std::shared_ptr<tree::node> lhs,
                                std::shared_ptr<tree::node> rhs) const {
-    return lhs->depth + h1(lhs->state) < rhs->depth + h1(rhs->state);
+    return lhs->depth + h1(lhs->state) > rhs->depth + h1(rhs->state);
 }
 
 bool comparator_h2::operator()(std::shared_ptr<tree::node> lhs,
                                std::shared_ptr<tree::node> rhs) const {
-    return lhs->depth + h2(lhs->state) < rhs->depth + h2(rhs->state);
+    return lhs->depth + h2(lhs->state) > rhs->depth + h2(rhs->state);
 }

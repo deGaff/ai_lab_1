@@ -26,14 +26,14 @@ int main() {
 //    std::cout << a.getManhattanDist(c);
 //    pause();
 
-//    menu m;
-//
-//    m.use();
+    menu m;
+
+    m.use();
 
 
-    AStar<comparator_h1>(a, c, std::cout);
+//    AStar<comparator_h1>(a, c, std::cout);
 //    AStar<comparator_h1>(a, c, fstr);
-    pause();
+//    pause();
 
     return 0;
 }
