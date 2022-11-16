@@ -284,7 +284,9 @@ void menu::print() {
                 "________________________________________________________\n" <<
                 "e. Solve with A* (second heuristic func): Turn Based\n" <<
                 "r. Solve with A* (second heuristic func): into \"output_astar2.txt\" file\n" <<
-                "t. Solve with A* (second heuristic func): at once into console\n";
+                "t. Solve with A* (second heuristic func): at once into console\n" <<
+                "________________________________________________________\n";
+
 
     std::cout << "0. Exit\n";
 }
@@ -331,22 +333,39 @@ void menu::use() {
                     std::cout << "Enter limit\n";
                     std::cin >> limit;
                     tree::limitedDFS(original.second, target.second, false, limit, o_dfs);
-                    std::cout << "Puzzle was solved. Results are in \"output_dfs.txt\" file\n";
+                    std::cout << "Puzzle was solved. Results are in \"output_astar1.txt\" file\n";
                     break;
                 case '8':
+                    std::cout << "Enter limit\n";
+                    std::cin >> limit;
                     tree::limitedDFS(original.second, target.second, false, limit, std::cout);
                     break;
                 case '9':
-                    tree::
+                    tree::AStar<comparator_h1>(original.second, target.second, true, std::cout);
+                    std::cout << "Puzzle was solved. Results are in \"output_dfs.txt\" file\n";
                     break;
                 case 'q':
+                    tree::AStar<comparator_h1>(original.second, target.second, false, o_star1);
                     break;
                 case 'w':
+                    tree::AStar<comparator_h1>(original.second, target.second, false, std::cout);
+                    break;
+                case 'e':
+                    tree::AStar<comparator_h2>(original.second, target.second, true, std::cout);
+                    break;
+                case 'r':
+                    tree::AStar<comparator_h2>(original.second, target.second, false, o_star2);
+                    std::cout << "Puzzle was solved. Results are in \"output_astar2.txt\" file\n";
+                    break;
+                case 't':
+                    tree::AStar<comparator_h2>(original.second, target.second, false, std::cout);
                     break;
                 case '0':
-                    exit(0);
                     o_bfs.close();
                     o_dfs.close();
+                    o_star1.close();
+                    o_star2.close();
+                    exit(0);
                 default:
                     std::cout << "Wrong symbol\n";
             }

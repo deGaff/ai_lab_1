@@ -138,52 +138,57 @@ public:
                     std::shared_ptr<tree::node> rhs) const;
 };
 
-//template <typename comparator>
-//void AStar(const cell &original_state, const cell &target_state, std::ostream& out) {
-//    STRING str;
-//
-//    std::unordered_set<cell, cell_hash> open_list, closed_list;
-//    out << mes::longline;
-//
-//    std::priority_queue<std::shared_ptr<tree::node>, std::vector<std::shared_ptr<tree::node>>, comparator> q;
-//    q.push(std::make_shared<tree::node>(original_state));
-//    open_list.insert(q.top()->state);
-//
-//    while(!q.empty()) {
-//        str.clear();
-//
-//        auto current = q.top();
-//        q.pop();
-//
-//        str << current->state;
-//        str.addSpacing(mes::children);
-//
-//        open_list.erase(current->state);
-//        closed_list.insert(current->state);
-//
-//        if (current->state == target_state) {
-//            str.addSpacing(mes::goal_state);
-//            out << str;
-//            out << mes::longline;
-//            return;
-//        }
-//
-//        for (auto &performed_action : tree::actions) {
-//            if (performed_action.isPossible(current->state)) {
-//                auto ptr = std::make_shared<tree::node>(current, performed_action);
-//                if(closed_list.find(ptr->state) == closed_list.end()
-//                    && open_list.insert(ptr->state).second) {
-//                    q.push(ptr);
-//                    str << ptr->state;
-//                }
-//            }
-//        }
-//
-//        out << str;
-//    }
-//    str.addSpacing(mes::no_goal_state);
-//    out << str;
-//    out << mes::longline;
-//}
+namespace tree {
+    template <typename comparator>
+    void AStar(const cell &original_state, const cell &target_state, bool isTurnBased, std::ostream& out) {
+        STRING str;
 
+        std::unordered_set<cell, cell_hash> open_list, closed_list;
+
+        std::priority_queue<std::shared_ptr<tree::node>, std::vector<std::shared_ptr<tree::node>>, comparator> q;
+        q.push(std::make_shared<tree::node>(original_state));
+        open_list.insert(q.top()->state);
+
+        while(!q.empty()) {
+            str.clear();
+
+            auto current = q.top();
+            q.pop();
+
+            str << current->state;
+            turnBasedRoutine(str, out, isTurnBased);
+
+            open_list.erase(current->state);
+            closed_list.insert(current->state);
+
+            if (current->state == target_state) {
+                str.addSpacing(mes::goal_state);
+                out << str;
+                return;
+            }
+
+            str.addSpacing(mes::children);
+
+            for (auto &performed_action : tree::actions) {
+                if (performed_action.isPossible(current->state)) {
+
+                    auto ptr = std::make_shared<tree::node>(current, performed_action);
+                    str << ptr->state;
+
+                    if(closed_list.find(ptr->state) == closed_list.end()
+                       && open_list.insert(ptr->state).second) {
+                        q.push(ptr);
+                    }
+                    else {
+                        str.addSpacing(mes::visited);
+                    }
+                    turnBasedRoutine(str, out, isTurnBased);
+                }
+            }
+            if(!isTurnBased) out << str;
+        }
+        str.addSpacing(mes::no_goal_state);
+        out << str;
+    }
+}
 #endif //INC_1_TREE_H
