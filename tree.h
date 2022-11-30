@@ -12,19 +12,27 @@
 #include <tuple>
 #include <unordered_set>
 #include <queue>
-
+#include <chrono>
 
 #define ONE_TURN_PATH_COST 1
+
+namespace sc = std::chrono;
 
 namespace mes {
     static std::string spacing =        "              ";
     static std::string children =       "   CHILDREN:  ";
-    static std::string queue =          "     QUEUE:   ";
     static std::string visited =        " <--VISITED   ";
     static std::string no_goal_state =  " GOAL STATE NOT FOUND ";
     static std::string depth_limit =    "  DEPTH LIMIT REACHED ";
     static std::string goal_state =     "<-- GOAL STATE";
+    static std::string time_spent =     "TIME SPENT:   ";
+
+    static std::string depthspc =       "DEPTH:      ";
+    static std::string iterspc =        "ITERATIONS: ";
+    static std::string nodesspc =       "NODES:      ";
 }
+
+static bool profiling = false;
 
 char pause();
 
@@ -126,6 +134,12 @@ static cell goal({  {' ', '2', '3'},
 size_t h1(const cell &cur);
 size_t h2(const cell &cur);
 
+struct clock {
+    std::chrono::time_point<std::chrono::system_clock>
+            start, end;
+
+};
+
 class comparator_h1 {
 public:
     bool operator()(std::shared_ptr<tree::node> lhs,
@@ -141,15 +155,19 @@ public:
 namespace tree {
     template <typename comparator>
     void AStar(const cell &original_state, const cell &target_state, bool isTurnBased, std::ostream& out) {
-        STRING str;
 
-        std::unordered_set<cell, cell_hash> open_list, closed_list;
+        auto start = sc::system_clock::now();
+
+        STRING str;
+        size_t iter = 0, count = 0;
+
+        std::unordered_set<cell, cell_hash> closed_list;
 
         std::priority_queue<std::shared_ptr<tree::node>, std::vector<std::shared_ptr<tree::node>>, comparator> q;
         q.push(std::make_shared<tree::node>(original_state));
-        open_list.insert(q.top()->state);
 
         while(!q.empty()) {
+            ++iter;
             str.clear();
 
             auto current = q.top();
@@ -158,12 +176,22 @@ namespace tree {
             str << current->state;
             turnBasedRoutine(str, out, isTurnBased);
 
-            open_list.erase(current->state);
             closed_list.insert(current->state);
 
             if (current->state == target_state) {
                 str.addSpacing(mes::goal_state);
                 out << str;
+                out << mes::depthspc << current->depth << std::endl;
+
+                out <<  mes::nodesspc << count << std::endl <<
+                    mes::iterspc << iter << std::endl;
+                auto end = sc::system_clock::now();
+                auto duration = sc::duration_cast<sc::milliseconds>(end - start);
+                if(profiling) {
+                    out << mes::time_spent << duration.count() << " ms" << std::endl;
+                }
+
+
                 return;
             }
 
@@ -175,8 +203,8 @@ namespace tree {
                     auto ptr = std::make_shared<tree::node>(current, performed_action);
                     str << ptr->state;
 
-                    if(closed_list.find(ptr->state) == closed_list.end()
-                       && open_list.insert(ptr->state).second) {
+                    if(closed_list.find(ptr->state) == closed_list.end()) {
+                        ++count;
                         q.push(ptr);
                     }
                     else {
@@ -189,6 +217,14 @@ namespace tree {
         }
         str.addSpacing(mes::no_goal_state);
         out << str;
+
+        out <<  mes::nodesspc << count << std::endl <<
+            mes::iterspc << iter << std::endl;
+        auto end = sc::system_clock::now();
+        auto duration = sc::duration_cast<sc::nanoseconds>(end - start);
+        if(profiling) {
+            out << mes::time_spent << duration.count() << " ms" << std::endl;
+        }
     }
 }
 #endif //INC_1_TREE_H

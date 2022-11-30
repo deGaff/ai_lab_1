@@ -8,9 +8,6 @@
 #include <unordered_set>
 #include <fstream>
 #include <conio.h>
-//#include <math.h>
-
-//todo make STRING namespace (and rename perhaps)
 
 char pause() {
     std::string dump;
@@ -155,20 +152,25 @@ size_t cell_hash::operator()(const cell &c) const {
 
 void tree::turnBasedRoutine(STRING& str, std::ostream& out, bool isTurnBased) {
     if(isTurnBased) {
-        std::cout << str;
+        out << str;
         pause();
     }
 }
 
 void tree::BFS(const cell &original_state, const cell &target_state, bool isTurnBased, std::ostream& out) {
+
+    auto start = sc::system_clock::now();
+
     STRING str;
     std::unordered_set<cell, cell_hash> states;
+    size_t iter = 0, count = 0;
 
     std::queue<std::shared_ptr<tree::node>> q;
     q.push(std::make_shared<tree::node>(original_state));
     states.insert(original_state);
 
     while(!q.empty()) {
+        ++iter;
         str.clear();
 
         auto current = q.front();
@@ -179,6 +181,17 @@ void tree::BFS(const cell &original_state, const cell &target_state, bool isTurn
         if (current->state == target_state) {
             str.addSpacing(mes::goal_state);
             out << str;
+            out << mes::depthspc << current->depth << std::endl;
+
+
+            out <<  mes::nodesspc << count << std::endl <<
+                    mes::iterspc << iter << std::endl;
+            auto end = sc::system_clock::now();
+            auto duration = sc::duration_cast<sc::milliseconds>(end - start);
+            if(profiling) {
+                out << mes::time_spent << duration.count() << " ms" << std::endl;
+            }
+
             return;
         }
 
@@ -194,6 +207,7 @@ void tree::BFS(const cell &original_state, const cell &target_state, bool isTurn
                     str.addSpacing(mes::visited);
                 }
                 else {
+                    ++count;
                     q.push(ptr);
                 }
 
@@ -203,38 +217,69 @@ void tree::BFS(const cell &original_state, const cell &target_state, bool isTurn
         if(!isTurnBased) out << str;
         q.pop();
     }
+
     str.addSpacing(mes::no_goal_state);
-    std::cout << str;
+    out << str;
+
+    out <<  mes::nodesspc << count << std::endl <<
+        mes::iterspc << iter << std::endl;
+    auto end = sc::system_clock::now();
+    auto duration = sc::duration_cast<sc::milliseconds>(end - start);
+    if(profiling) {
+        out << mes::time_spent << duration.count() << " ms" << std::endl;
+    }
 }
 
 void tree::limitedDFS(const cell &original_state, const cell &target_state,
                 bool isTurnBased, size_t limited, std::ostream& out) {
+
+    auto start = sc::system_clock::now();
+
     STRING str;
     std::unordered_set<cell, cell_hash> states;
+    size_t iter = 0, count = 0;
 
     std::stack<std::shared_ptr<tree::node>> s;
     s.push(std::make_shared<tree::node>(original_state));
-    states.insert(original_state);
 
     while(!s.empty()) {
+        ++iter;
         str.clear();
 
         auto current = s.top();
-        s.pop();
 
         str << current->state;
         turnBasedRoutine(str, out, isTurnBased);
-
-        if(current->depth == limited) {
-            str.addSpacing(mes::depth_limit);
-            turnBasedRoutine(str, out, isTurnBased);
-            continue;
-        }
+        s.pop();
 
         if (current->state == target_state) {
             str.addSpacing(mes::goal_state);
             out << str;
+            out << mes::depthspc << current->depth << std::endl;
+
+            out <<  mes::nodesspc << count << std::endl <<
+                mes::iterspc << iter << std::endl;
+            auto end = sc::system_clock::now();
+            auto duration = sc::duration_cast<sc::milliseconds>(end - start);
+            if(profiling) {
+                out << mes::time_spent << duration.count() << " ms" << std::endl;
+            }
+
             return;
+        }
+
+
+        if(!(states.insert(current->state).second)) {
+            str.addSpacing(mes::visited);
+            turnBasedRoutine(str, out, isTurnBased);
+            out << str;
+            continue;
+        }
+        if(current->depth == limited) {
+            str.addSpacing(mes::depth_limit);
+            turnBasedRoutine(str, out, isTurnBased);
+            out << str;
+            continue;
         }
 
         str.addSpacing(mes::children);
@@ -244,13 +289,9 @@ void tree::limitedDFS(const cell &original_state, const cell &target_state,
 
                 auto ptr = std::make_shared<tree::node>(current, performed_action);
                 str << ptr->state;
+                s.push(ptr);
 
-                if(!(states.insert(ptr->state).second)) {
-                    str.addSpacing(mes::visited);
-                }
-                else {
-                    s.push(ptr);
-                }
+                ++count;
 
                 turnBasedRoutine(str, out, isTurnBased);
             }
@@ -258,7 +299,15 @@ void tree::limitedDFS(const cell &original_state, const cell &target_state,
         if(!isTurnBased) out << str;
     }
     str.addSpacing(mes::no_goal_state);
-    std::cout << str;
+    out << str;
+
+    out <<  mes::nodesspc << count << std::endl <<
+        mes::iterspc << iter << std::endl;
+    auto end = sc::system_clock::now();
+    auto duration = sc::duration_cast<sc::milliseconds>(end - start);
+    if(profiling) {
+        out << mes::time_spent << duration.count() << " ms" << std::endl;
+    }
 }
 
 void menu::print() {
@@ -285,9 +334,9 @@ void menu::print() {
                 "e. Solve with A* (second heuristic func): Turn Based\n" <<
                 "r. Solve with A* (second heuristic func): into \"output_astar2.txt\" file\n" <<
                 "t. Solve with A* (second heuristic func): at once into console\n" <<
+                "________________________________________________________\n" <<
+                "y. Turn " << ((profiling)?("off"):("on")) << " time profiling\n" <<
                 "________________________________________________________\n";
-
-
     std::cout << "0. Exit\n";
 }
 
@@ -333,7 +382,7 @@ void menu::use() {
                     std::cout << "Enter limit\n";
                     std::cin >> limit;
                     tree::limitedDFS(original.second, target.second, false, limit, o_dfs);
-                    std::cout << "Puzzle was solved. Results are in \"output_astar1.txt\" file\n";
+                    std::cout << "Puzzle was solved. Results are in \"output_dfs.txt\" file\n";
                     break;
                 case '8':
                     std::cout << "Enter limit\n";
@@ -342,10 +391,10 @@ void menu::use() {
                     break;
                 case '9':
                     tree::AStar<comparator_h1>(original.second, target.second, true, std::cout);
-                    std::cout << "Puzzle was solved. Results are in \"output_dfs.txt\" file\n";
                     break;
                 case 'q':
                     tree::AStar<comparator_h1>(original.second, target.second, false, o_star1);
+                    std::cout << "Puzzle was solved. Results are in \"output_astar1.txt\" file\n";
                     break;
                 case 'w':
                     tree::AStar<comparator_h1>(original.second, target.second, false, std::cout);
@@ -359,6 +408,10 @@ void menu::use() {
                     break;
                 case 't':
                     tree::AStar<comparator_h2>(original.second, target.second, false, std::cout);
+                    break;
+                case 'y':
+                    profiling = (profiling+1)%2;
+                    std::cout << "Profiling was turned " << ((profiling)?("on"):("off"));
                     break;
                 case '0':
                     o_bfs.close();
